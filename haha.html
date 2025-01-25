@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Items List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background-color: #4CAF50;
+            overflow: hidden;
+        }
+        .navbar a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+        .navbar a:hover {
+            background-color: #45a049;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        button {
+            padding: 5px 10px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .edit-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .delete-button {
+            background-color: #f44336;
+            color: white;
+        }
+        img {
+            max-width: 100px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">Create Item</a>
+        <a href="/haha">Items List</a>
+    </div>
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="itemsTableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function fetchItems() {
+            fetch('http://localhost:3000/api/items')
+                .then(response => response.json())
+                .then(data => {
+                    const itemsTableBody = document.getElementById('itemsTableBody');
+                    itemsTableBody.innerHTML = '';
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        const imageCell = document.createElement('td');
+                        const idCell = document.createElement('td');
+                        const nameCell = document.createElement('td');
+                        const addressCell = document.createElement('td');
+                        const ageCell = document.createElement('td');
+                        const genderCell = document.createElement('td');
+                        const actionsCell = document.createElement('td');
+
+                        if (item.image) {
+                            const img = document.createElement('img');
+                            img.src = `uploads/${item.image}`;
+                            imageCell.appendChild(img);
+                        }
+
+                        idCell.textContent = item.id;
+                        nameCell.textContent = item.name;
+                        addressCell.textContent = item.address;
+                        ageCell.textContent = item.age;
+                        genderCell.textContent = item.gender;
+
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.className = 'delete-button';
+                        deleteButton.onclick = () => deleteItem(item.id);
+
+                        const editButton = document.createElement('button');
+                        editButton.textContent = 'Edit';
+                        editButton.className = 'edit-button';
+                        editButton.onclick = () => editItem(item.id, item.name, item.address, item.age, item.gender);
+
+                        actionsCell.appendChild(editButton);
+                        actionsCell.appendChild(deleteButton);
+
+                        row.appendChild(imageCell);
+                        row.appendChild(idCell);
+                        row.appendChild(nameCell);
+                        row.appendChild(addressCell);
+                        row.appendChild(ageCell);
+                        row.appendChild(genderCell);
+                        row.appendChild(actionsCell);
+                        itemsTableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function deleteItem(id) {
+            fetch(`http://localhost:3000/items/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(() => {
+                fetchItems();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function editItem(id, currentName, currentAddress, currentAge, currentGender) {
+            const newName = prompt('Enter new name:', currentName);
+            const newAddress = prompt('Enter new address:', currentAddress);
+            const newAge = prompt('Enter new age:', currentAge);
+            const newGender = prompt('Enter new gender (male/female/other):', currentGender);
+            if (newName && newAddress && newAge && newGender) {
+                fetch(`http://localhost:3000/items/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: newName, address: newAddress, age: parseInt(newAge), gender: newGender })
+                })
+                .then(response => response.json())
+                .then(() => {
+                    fetchItems();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+        fetchItems();
+    </script>
+</body>
+</html>
